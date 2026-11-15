@@ -7,7 +7,7 @@ const CONFIG = {
   ella: 'Paula',
 
   // Día en que empezasteis (AAAA-MM-DD). Se usa para el contador de la carta.
-  fechaInicio: '2026-05-15',
+  fechaInicio: '2026-05-17',
 
   // La carta final (cada línea es un párrafo)
   carta: [
