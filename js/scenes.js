@@ -22,9 +22,17 @@ function drawThread(c, x1, y1, x2, y2, t, k = 1) {
 class TitleScene {
   constructor() { this.t = 0; this.fh = new FloatHearts(26); this.parts = new Particles(); }
   update(dt) { this.t += dt; this.fh.update(dt); this.parts.update(dt); }
-  down(x, y) { this.parts.burst(x, y, 8, { colors: ['#ff4d7d', '#ff8fab', '#fff'], size: 14 }); Sound.pop(); }
+  down(x, y) {
+    if (this.chi && Math.hypot(x - this.chi.x, y - this.chi.y) < this.chi.r) {
+      Sound.bark(); vib(20); this.hopT = 0.5;
+      this.parts.burst(this.chi.x, this.chi.y - this.chi.r * 0.6, 10, { colors: ['#3ccf6e', '#7dffa8', '#fff'], size: 14, up: 120 });
+      return;
+    }
+    this.parts.burst(x, y, 8, { colors: ['#ff4d7d', '#ff8fab', '#fff'], size: 14 }); Sound.pop();
+  }
   draw(c) {
     const t = this.t;
+    this.hopT = Math.max(0, (this.hopT || 0) - 1 / 60);
     Sky.draw(c, t, { mx: W * 0.5, my: H * 0.5, mr: Math.min(W, H) * 0.2 });
     this.fh.draw(c, t);
     drawHill(c, H * 0.8, '#21153f', 20, 0.5);
@@ -34,6 +42,9 @@ class TitleScene {
     drawThread(c, W / 2 - d + 15 * u, gy - 27 * u, W / 2 + d - 15 * u, gy - 27 * u, t);
     drawChar(c, 'pau', W / 2 - d, gy, sz, { tilt: 0.06 });
     drawChar(c, 'paula', W / 2 + d, gy, sz, { dir: -1, tilt: 0.06 });
+    const ch = sz * 0.42, hop = Math.sin(this.hopT / 0.5 * Math.PI) * 30;
+    drawChi(c, W / 2, gy + 6 * S, ch, { hop, happy: this.hopT > 0 });
+    this.chi = { x: W / 2, y: gy - ch * 0.5, r: ch * 0.7 };
     const hb = 1 + Math.pow(Math.max(0, Math.sin(t * 3)), 8) * 0.25;
     drawHeart(c, W / 2, gy - sz * 1.25, 34 * S * hb, '#ff4d7d');
     this.parts.draw(c);
@@ -98,6 +109,7 @@ class MapScene {
       const bx = n.x + side * (this.r + sz * 0.55), by = n.y + this.r * 0.6;
       drawChar(c, 'pau', bx - sz * 0.22, by, sz, { happy: true });
       drawChar(c, 'paula', bx + sz * 0.22, by, sz, { dir: -1, happy: true });
+      drawChi(c, bx + sz * 0.55, by + 2, sz * 0.42, { dir: -1, hop: Math.abs(Math.sin(t * 3)) * 6 });
     }
     this.parts.draw(c);
   }
@@ -116,7 +128,7 @@ class FinalScene {
     this.parts.burst(x, y, 12, { colors: [col, '#fff'], type: 'spark', min: 30, max: 180, g: 60, drag: 1, life: 1.4, size: 10 });
   }
   celebrate() { this.party = 4; for (let i = 0; i < 5; i++) setTimeout(() => this.launch(), i * 180); }
-  launch() { this.rockets.push({ x: rand(W * 0.15, W * 0.85), y: H, ty: rand(H * 0.12, H * 0.42), col: pick(['#ff4d7d', '#ffd77a', '#c77dff', '#7ee0ff', '#ff8fab']) }); }
+  launch() { this.rockets.push({ x: rand(W * 0.15, W * 0.85), y: H, ty: rand(H * 0.12, H * 0.42), col: pick(['#ff4d7d', '#ffd77a', '#c77dff', '#7ee0ff', '#ff8fab', '#3ccf6e']) }); }
   update(dt) {
     this.t += dt; this.parts.update(dt); this.fh.update(dt);
     this.party = Math.max(0, this.party - dt);
@@ -141,6 +153,7 @@ class FinalScene {
     const sz = clamp(150 * S, 100, 200), gy = H * 0.86, d = sz * 0.2;
     drawChar(c, 'pau', W / 2 - d, gy, sz, { happy: true, tilt: 0.12, arms: this.party > 0 ? 'up' : null });
     drawChar(c, 'paula', W / 2 + d, gy, sz, { dir: -1, happy: true, tilt: 0.12, arms: this.party > 0 ? 'up' : null });
+    drawChi(c, W / 2 + d + sz * 0.42, gy + 4 * S, sz * 0.42, { dir: -1, happy: true, hop: this.party > 0 ? Math.abs(Math.sin(t * 8)) * 18 : 0 });
     const hb = 1 + Math.pow(Math.max(0, Math.sin(t * 3)), 8) * 0.3;
     drawHeart(c, W / 2, gy - sz * 1.15, 30 * S * hb, '#ff4d7d');
     const k = easeOutBack(clamp(t / 1.2, 0, 1));

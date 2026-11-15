@@ -8,12 +8,14 @@ La Luna ha escondido seis recuerdos por el cielo y Pau y Paula tienen que recupe
 |---|---|---|
 | 1 | El Primer Encuentro | Carrera por la ciudad: salta (doble salto) y recoge corazones hasta llegar a Paula |
 | 2 | Lluvia de Mariposas | Atrapa mariposas, corazones y cartas doradas con el tarro; esquiva las tormentas |
-| 3 | Constelaciones | Une las estrellas en orden para dibujar mensajes en el cielo |
+| 3 | Constelaciones | Une las estrellas en orden para dibujar mensajes en el cielo… y un chiwawa 💚 |
 | 4 | La Caja de Recuerdos | Juego de memoria con nuestros pequeños momentos |
 | 5 | La Carta Voladora | Guía un avión de papel con una carta de amor entre las nubes |
 | 6 | Nuestra Canción | Juego de ritmo: cada corazón que aciertas toca una nota de nuestra canción |
 
-Al terminar las seis lunas se abre **el final**, con fuegos artificiales, una carta y una pregunta muy importante. 💌
+Un chiwawa con collar verde acompaña a Pau y Paula durante toda la aventura (en la portada se le puede tocar 🐶).
+
+Al terminar las seis lunas se abre **el final**: fuegos artificiales, un **vale de rasca y gana para una cena**, una carta y una pregunta muy importante. 💌
 
 ## Jugar
 Funciona en móvil, tablet y ordenador (táctil, ratón o teclado). Solo hay que abrir la página.

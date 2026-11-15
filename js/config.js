@@ -10,17 +10,26 @@ const CONFIG = {
   fechaInicio: '2026-05-17',
 
   // La carta final (cada línea es un párrafo)
+  saludo: 'Hola, mi chulilla',
   carta: [
-    'Hoy hace seis lunas que mi vida tiene otro color.',
-    'Seis meses de risas tontas, de mensajes a deshoras, de abrazos que lo arreglan todo y de momentos que guardo como si fueran tesoros.',
-    'Gracias por ser mi lugar favorito, por tu paciencia, por tu forma de mirarme y por hacer que hasta los días normales parezcan especiales.',
-    'Este jueguito es mi manera de decirte que cada luna a tu lado es mi favorita… y que quiero muchas, muchísimas más.',
-    'Te quiero muchísimo.'
+    'Ya son 6 meses a tu lado y parece que solo haya pasado uno.',
+    'Espero que hayas jugado a todos los minijuegos y te lo hayas pasado muy bien.',
+    'Aunque no se me da muy bien hacer cosas a mano, te he preparado algo que sí se me da bien: la informática y quererte. Así que lo he juntado todo con ayuda de Claude y ha salido esto.',
+    'Espero que te haya gustado mucho, y recuerda que te quiero mucho, mi chiwawa 💚'
   ],
-  firma: 'Tuyo siempre, Pau 💖',
+  firma: 'Pau 💚',
+
+  // El vale que aparece al final, antes de la carta (se rasca para descubrirlo)
+  vale: {
+    icono: '🍝',
+    titulo: 'Una cena para dos',
+    detalle: 'Tú eliges el sitio, yo invito 😏',
+    valido: 'Cuando tú quieras',
+    letraPequena: 'Incluye postre compartido, mimos ilimitados y mirarte como un tonto toda la noche.'
+  },
 
   pregunta: '¿Quieres seguir escribiendo nuestra historia conmigo?',
-  respuestaSi: '¡Sabía que dirías que sí! Aquí empieza la luna número siete… y todas las que vengan. Te quiero, Paula. 💖',
+  respuestaSi: '¡Sabía que dirías que sí! Aquí empieza la luna número siete… y todas las que vengan. Te quiero, mi chiwawa. 💚',
 
   // Un recuerdo que se desbloquea al completar cada luna
   recuerdos: [

@@ -60,7 +60,12 @@ const Sound = {
     this.tone(b, 0.1, { type: 'square', vol: 0.05 });
     this.tone(b * 1.5, 0.28, { vol: 0.16, when: t + 0.06 });
   },
-  hit() { this.tone(200, 0.35, { type: 'sawtooth', vol: 0.12, slide: 55 }); },
+  hit() { this.tone(200, 0.35, { type: 'sawtooth', vol: 0.12, slide: 55 }); vib(70); },
+  bark() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    for (const d of [0, 0.2]) { this.tone(900, 0.09, { type: 'square', vol: 0.07, slide: 420, when: t + d }); this.tone(1400, 0.07, { type: 'triangle', vol: 0.05, slide: 700, when: t + d }); }
+  },
   wrong() { this.tone(230, 0.16, { type: 'square', vol: 0.05, slide: 180 }); },
   flip() { this.tone(480, 0.09, { type: 'triangle', vol: 0.14, slide: 820 }); },
   tick() { this.tone(660, 0.12, { vol: 0.22 }); },
@@ -69,6 +74,7 @@ const Sound = {
     if (!this.ctx) return;
     const t = this.ctx.currentTime;
     [72, 76, 79, 84, 88].forEach((m, i) => this.bell(m, t + i * 0.11, 0.22));
+    vib([30, 50, 30]);
   },
   pop() { this.tone(300 + Math.random() * 500, 0.25, { type: 'triangle', vol: 0.08, slide: 90 }); },
 

@@ -66,7 +66,11 @@ class GameBase {
     }
     if (this.ended) {
       const k = Math.min(1, this.endT * 2.2), sc = easeOutBack(k);
-      txt(c, this.o.endText || '¡Lo lograste!', W / 2, H * 0.3, Math.min(56 * S, W / 9) * sc, '#fff', { weight: 700, stroke: '#ff3d75', lw: 9 * S });
+      const et = this.o.endText || '¡Lo lograste!';
+      let fs = Math.min(56 * S, W / 9);
+      c.font = `700 ${fs}px ${FONT}`; const tw = c.measureText(et).width;
+      if (tw > W * 0.9) fs *= W * 0.9 / tw;
+      txt(c, et, W / 2, H * 0.3, fs * sc, '#fff', { weight: 700, stroke: this.o.endStroke || '#ff3d75', lw: 9 * S });
     }
   }
 }
@@ -77,6 +81,7 @@ class Runner extends GameBase {
     super({ hint: { touch: 'Toca para saltar · ¡toca otra vez en el aire = doble salto!', pc: 'ESPACIO / ↑ / clic para saltar · ¡doble salto!' }, endText: '¡Por fin juntos!' });
     this.dist = 0; this.goal = 17500; this.mul = 1; this.py = 0; this.vy = 0; this.jumps = 0; this.inv = 0;
     this.obs = []; this.items = []; this.nextObs = 1300; this.nextItem = 700; this.met = false; this.progress = 0;
+    this.cy = 0; this.cvy = 0; this.cJumpT = -1;
     this.bld = []; let x = 0;
     while (x < 2600) { const w = rand(80, 180), h = rand(150, 400); this.bld.push({ x, w, h, win: Array.from({ length: 60 }, () => Math.random() < 0.33) }); x += w + rand(10, 40); }
     this.cityLen = x;
@@ -85,7 +90,7 @@ class Runner extends GameBase {
   sx(wx) { return this.px + (wx - this.dist) * S; }
   jump() {
     if (!this.playing || this.jumps >= 2) return;
-    this.vy = this.jumps === 0 ? 1000 : 900; this.jumps++;
+    this.vy = this.jumps === 0 ? 1000 : 900; this.jumps++; this.cJumpT = 0.14;
     Sound.jump(this.jumps);
     this.parts.burst(this.px, this.gy - this.py * S, 5, { type: 'spark', color: '#fff', max: 120, g: 0, life: 0.5, size: 10 });
   }
@@ -104,8 +109,9 @@ class Runner extends GameBase {
     const pat = randi(0, 2), n = randi(3, 5);
     for (let i = 0; i < n; i++) {
       const y = pat === 0 ? 60 : pat === 1 ? 70 + Math.sin(i / (n - 1) * Math.PI) * 120 : 190;
-      this.items.push({ wx: wx + i * 55, y, got: false, ph: Math.random() * TAU });
-      this.total++;
+      const gold = i === Math.floor(n / 2) && Math.random() < 0.18;
+      this.items.push({ wx: wx + i * 55, y, got: false, ph: Math.random() * TAU, v: gold ? 5 : 1 });
+      this.total += gold ? 5 : 1;
     }
   }
   step(dt) {
@@ -116,6 +122,7 @@ class Runner extends GameBase {
     this.vy -= 2900 * dt; this.py += this.vy * dt;
     if (this.py <= 0) { this.py = 0; this.vy = 0; this.jumps = 0; }
     this.inv = Math.max(0, this.inv - dt);
+    this.chiStep(dt);
     const ahead = this.dist + W / S + 150;
     if (this.dist < this.goal - 2400)
       while (this.nextObs < ahead) { this.spawnObs(this.nextObs); this.nextObs += rand(560, 960) - Math.min(this.dist * 0.008, 160); }
@@ -136,8 +143,9 @@ class Runner extends GameBase {
     for (const it of this.items) {
       if (it.got) continue;
       if (Math.abs(it.wx - this.dist) < 30 && Math.abs(it.y - (this.py + 50)) < 58) {
-        it.got = true; this.hearts++; Sound.coin(this.hearts % 5);
-        this.parts.burst(this.sx(it.wx), this.gy - it.y * S, 6, { colors: ['#ff4d7d', '#ff8fab', '#ffd6e0'], size: 10 });
+        it.got = true; this.hearts += it.v; Sound.coin(it.v > 1 ? 9 : this.hearts % 5);
+        this.parts.burst(this.sx(it.wx), this.gy - it.y * S, it.v > 1 ? 14 : 6, { colors: it.v > 1 ? ['#ffd77a', '#fff3b0', '#fff'] : ['#ff4d7d', '#ff8fab', '#ffd6e0'], size: 10, type: it.v > 1 ? 'star' : 'heart' });
+        if (it.v > 1) this.float(this.sx(it.wx), this.gy - it.y * S - 20 * S, '+5 ✨', '#ffd77a');
       }
     }
     this.obs = this.obs.filter(o => o.wx > this.dist - 300);
@@ -148,7 +156,14 @@ class Runner extends GameBase {
       this.parts.burst(this.px + 35 * S, this.gy - 110 * S, 30, { colors: ['#ff4d7d', '#ff8fab', '#fff'], up: 150, size: 16 });
     }
   }
-  ending() {
+  chiStep(dt) {
+    if (this.cJumpT > 0) { this.cJumpT -= dt; if (this.cJumpT <= 0) this.cvy = 820; }
+    this.cvy -= 2900 * dt; this.cy += this.cvy * dt;
+    if (this.cy <= 0) { this.cy = 0; this.cvy = 0; }
+  }
+  ending(dt) {
+    this.chiStep(dt);
+    if (this.cy === 0 && Math.random() < 0.03) this.cvy = 500;
     if (Math.random() < 0.15) this.parts.add({ x: this.px + 35 * S + rand(-20, 20) * S, y: this.gy - 120 * S, vy: -80 * S, vx: rand(-30, 30) * S, life: 1.5, size: rand(10, 18) * S, color: pick(['#ff4d7d', '#ff8fab']) });
   }
   draw(c) {
@@ -186,8 +201,8 @@ class Runner extends GameBase {
     for (const it of this.items) {
       const x = this.sx(it.wx); if (x < -40 || x > W + 40) continue;
       const y = this.gy - it.y * S + Math.sin(t * 4 + it.ph) * 5 * S;
-      glow(c, x, y, 26 * S, 'rgba(255,80,130,0.35)');
-      drawHeart(c, x, y, 28 * S, '#ff4d7d');
+      if (it.v > 1) { glow(c, x, y, 36 * S, 'rgba(255,215,90,0.55)'); drawHeart(c, x, y, 34 * S, '#ffc23d'); sparkle(c, x + 12 * S, y - 12 * S, 6 * S * (1 + Math.sin(t * 8) * 0.4), '#fff'); }
+      else { glow(c, x, y, 26 * S, 'rgba(255,80,130,0.35)'); drawHeart(c, x, y, 28 * S, '#ff4d7d'); }
     }
     // obstáculos
     for (const o of this.obs) {
@@ -215,6 +230,8 @@ class Runner extends GameBase {
     // Paula esperando
     const pxl = this.sx(this.goal);
     if (pxl < W + 80) drawChar(c, 'paula', pxl, this.gy, 112 * S, { dir: -1, arms: this.met ? 'up' : 'wave', happy: this.met });
+    // el chiwawa le sigue
+    drawChi(c, this.px - 62 * S, this.gy - this.cy * S, 46 * S, { hop: this.playing && this.cy === 0 ? Math.abs(Math.sin(t * 14)) * 5 : 0, happy: this.met, noShadow: this.cy > 0 });
     // Pau
     const blink = this.inv > 0 && Math.floor(this.t * 14) % 2 === 0;
     drawChar(c, 'pau', this.px, this.gy - this.py * S, 110 * S, {
@@ -340,6 +357,7 @@ class Catch extends GameBase {
         if (Math.sin(it.t * 9) > 0.85) { c.strokeStyle = '#fff59a'; c.lineWidth = 2.5 * S; c.beginPath(); c.moveTo(it.x + 2 * S, it.y - 10 * S); c.lineTo(it.x - 5 * S, it.y + 4 * S); c.lineTo(it.x + 3 * S, it.y + 4 * S); c.lineTo(it.x - 3 * S, it.y + 16 * S); c.stroke(); }
       }
     }
+    drawChi(c, W - 40 * S, this.gy + 2 * S, 44 * S, { dir: -1, happy: this.ended, hop: this.ended ? Math.abs(Math.sin(t * 8)) * 12 : 0 });
     if (this.ended || this.pauX > -60) drawChar(c, 'pau', this.pauX, this.gy, this.ch * 0.95, { happy: true, arms: 'up', dir: this.pauX < this.x ? 1 : -1 });
     // Paula + tarro
     const blink = this.stun > 0 && Math.floor(t * 12) % 2 === 0;
@@ -365,12 +383,13 @@ class Catch extends GameBase {
 }
 
 /* ============ LUNA 3 · Constelaciones ============ */
-function normPts(pts) {
-  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+function normPts(pts, deco = []) {
+  const all = pts.concat(deco);
+  const xs = all.map(p => p[0]), ys = all.map(p => p[1]);
   const mx = Math.min(...xs), Mx = Math.max(...xs), my = Math.min(...ys), My = Math.max(...ys);
   const sc = Math.max(Mx - mx, My - my);
   const ox = (1 - (Mx - mx) / sc) / 2, oy = (1 - (My - my) / sc) / 2;
-  return pts.map(([x, y]) => ({ x: ox + (x - mx) / sc, y: oy + (y - my) / sc }));
+  return all.map(([x, y]) => ({ x: ox + (x - mx) / sc, y: oy + (y - my) / sc }));
 }
 const FIGURES = (() => {
   const heart = [];
@@ -379,18 +398,24 @@ const FIGURES = (() => {
   for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + i / 5 * TAU; star.push([Math.cos(a), Math.sin(a)]); }
   const inf = [];
   for (let i = 0; i < 12; i++) { const a = (i + 0.5) / 12 * TAU, d = 1 + Math.sin(a) * Math.sin(a); inf.push([Math.cos(a) / d, Math.sin(a) * Math.cos(a) / d]); }
+  const chiP = [[0.50, 0.30], [0.64, 0.31], [0.97, 0.0], [0.95, 0.24], [0.86, 0.48], [0.80, 0.70], [0.64, 0.86], [0.50, 0.92],
+    [0.36, 0.86], [0.20, 0.70], [0.14, 0.48], [0.05, 0.24], [0.03, 0.0], [0.36, 0.31]];
+  const chiAll = normPts(chiP, [[0.37, 0.56], [0.63, 0.56], [0.5, 0.74]]);
+  const chi = { name: '¿Un chiwawa?', msg: '¡Porque tú eres mi chiwawa! 💚', pts: chiAll.slice(0, 14), deco: chiAll.slice(14), green: true,
+    order: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 0] };
   const house = [[0.15, 1], [0.15, 0.45], [0.5, 0.08], [0.85, 0.45], [0.85, 1], [0.6, 1], [0.6, 0.7], [0.4, 0.7], [0.4, 1]];
   return [
     { name: 'Corazón', msg: 'Lo que siento por ti, escrito en el cielo.', pts: normPts(heart), order: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0] },
     { name: 'Estrella', msg: 'Brillas incluso en mis días más nublados.', pts: normPts(star), order: [0, 2, 4, 1, 3, 0] },
     { name: 'Infinito', msg: 'Así de largo quiero que sea lo nuestro.', pts: normPts(inf), order: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0] },
-    { name: 'Nuestro hogar', msg: 'Algún día, nuestra casita. Juntos.', pts: normPts(house), order: [0, 1, 2, 3, 4, 5, 6, 7, 8, 0] }
+    { name: 'Nuestro hogar', msg: 'Algún día, nuestra casita. Juntos.', pts: normPts(house), order: [0, 1, 2, 3, 4, 5, 6, 7, 8, 0] },
+    chi
   ];
 })();
 
 class Constel extends GameBase {
   constructor() {
-    super({ hint: { touch: 'Toca las estrellas en orden: 1, 2, 3…', pc: 'Haz clic en las estrellas en orden: 1, 2, 3…' }, endText: '¡El cielo es nuestro!' });
+    super({ hint: { touch: 'Toca las estrellas en orden: 1, 2, 3…', pc: 'Haz clic en las estrellas en orden: 1, 2, 3…' }, endText: '¡Porque eres mi chiwawa! 💚', endStroke: '#1f9a4d', endWait: 4.5 });
     this.fi = 0; this.stepI = 0; this.mist = 0; this.doneT = -1; this.progress = 0; this.hover = null;
     this.total = FIGURES.reduce((a, f) => a + f.order.length - 1, 0);
     this.bg = Array.from({ length: 60 }, () => ({ x: Math.random(), y: Math.random() * 0.75, r: rand(0.8, 2), p: rand(0, TAU) }));
@@ -421,7 +446,10 @@ class Constel extends GameBase {
       const q = this.pos(best);
       Sound.coin(Math.min(12, this.stepI));
       this.parts.burst(q.x, q.y, 8, { type: 'star', colors: ['#fff3b0', '#ffc2d4'], g: 0, size: 12 });
-      if (this.stepI >= f.order.length) { this.doneT = 0; Sound.win(); this.parts.burst(W / 2, this.oy + this.size / 2, 30, { colors: ['#ff4d7d', '#ffd77a', '#fff'], g: 60, size: 14 }); }
+      if (this.stepI >= f.order.length) {
+        this.doneT = 0; Sound.win(); if (f.green) Sound.bark();
+        this.parts.burst(W / 2, this.oy + this.size / 2, f.green ? 50 : 30, { colors: f.green ? ['#3ccf6e', '#7dffa8', '#fff'] : ['#ff4d7d', '#ffd77a', '#fff'], g: 60, size: 14 });
+      }
     } else if (best !== f.order[this.stepI - 1]) this.wrong(best);
   }
   wrong(i) { this.mist++; Sound.wrong(); const q = this.pos(i); this.float(q.x, q.y - 20 * S, '✗', '#ffb3c1'); }
@@ -439,7 +467,7 @@ class Constel extends GameBase {
     if (this.shoot) { this.shoot.l += dt; if (this.shoot.l > 1) this.shoot = null; }
   }
   result() { return { stars: this.mist <= 2 ? 3 : this.mist <= 6 ? 2 : 1, hearts: this.hearts }; }
-  hud(c, s) { txt(c, `${Math.min(this.fi + 1, 4)}/4`, W / 2, 12 + 44 * s, 15 * s, 'rgba(255,255,255,0.8)'); }
+  hud(c, s) { txt(c, `${Math.min(this.fi + 1, FIGURES.length)}/${FIGURES.length}`, W / 2, 12 + 44 * s, 15 * s, 'rgba(255,255,255,0.8)'); }
   draw(c) {
     const t = this.t;
     Sky.draw(c, t, { top: '#070620', mid: '#1b1450', bot: '#3c2466', moon: true, mx: W * 0.88, my: H * 0.1, mr: 26 * S, starA: 0.7 });
@@ -455,14 +483,18 @@ class Constel extends GameBase {
     const bx = W < H ? W * 0.5 : W * 0.15, gy = H * 0.86 + 6 * S, sz = clamp(84 * S, 55, 110);
     drawChar(c, 'pau', bx - 20 * S, gy, sz, { tilt: -0.2, happy: this.doneT >= 0 || this.ended });
     drawChar(c, 'paula', bx + 20 * S, gy, sz, { dir: -1, tilt: -0.2, happy: this.doneT >= 0 || this.ended });
+    const chiParty = (this.doneT >= 0 && this.fig.green) || this.ended;
+    drawChi(c, bx + 52 * S, gy + 2, sz * 0.42, { dir: -1, happy: chiParty, hop: chiParty ? Math.abs(Math.sin(t * 8)) * 14 : 0 });
     if (!this.started) { this.drawFX(c); return; }
     if (this.ended) {
       // todas las figuras en miniatura
       FIGURES.forEach((f, k) => {
-        const sz2 = Math.min(W / 5, H / 5), cxk = W / 2 + (k - 1.5) * sz2 * 1.15, cy = H * 0.52;
-        c.strokeStyle = 'rgba(255,215,150,0.85)'; c.lineWidth = 2; c.beginPath();
+        const n = FIGURES.length, big = !!f.green;
+        const sz2 = Math.min(W / (n + 1.5), H / 6), cxk = W / 2 + (k - (n - 1) / 2) * sz2 * 1.15, cy = H * 0.5;
+        c.strokeStyle = big ? '#7dffa8' : 'rgba(255,215,150,0.85)'; c.lineWidth = big ? 3 : 2; c.beginPath();
         f.order.forEach((pi, j) => { const p = f.pts[pi], x = cxk - sz2 / 2 + p.x * sz2, y = cy - sz2 / 2 + p.y * sz2; j ? c.lineTo(x, y) : c.moveTo(x, y); });
         c.stroke();
+        if (f.deco) for (const p of f.deco) sparkle(c, cxk - sz2 / 2 + p.x * sz2, cy - sz2 / 2 + p.y * sz2, 5, '#7dffa8');
       });
       this.drawFX(c); this.drawHUD(c); return;
     }
@@ -472,10 +504,20 @@ class Constel extends GameBase {
       c.lineCap = 'round'; c.lineJoin = 'round';
       const path = () => { c.beginPath(); for (let j = 0; j < this.stepI; j++) { const q = this.pos(f.order[j]); j ? c.lineTo(q.x, q.y) : c.moveTo(q.x, q.y); } };
       if (this.doneT >= 0) {
-        path(); c.fillStyle = `rgba(255,90,140,${Math.min(0.28, this.doneT * 0.3)})`; c.fill();
+        path(); c.fillStyle = f.green ? `rgba(80,220,130,${Math.min(0.28, this.doneT * 0.3)})` : `rgba(255,90,140,${Math.min(0.28, this.doneT * 0.3)})`; c.fill();
       }
-      path(); c.strokeStyle = 'rgba(255,150,190,0.35)'; c.lineWidth = 10 * S; c.stroke();
-      path(); c.strokeStyle = '#ffe9b0'; c.lineWidth = 2.6 * S; c.stroke();
+      const gr = f.green && this.doneT >= 0;
+      path(); c.strokeStyle = gr ? 'rgba(120,255,170,0.4)' : 'rgba(255,150,190,0.35)'; c.lineWidth = 10 * S; c.stroke();
+      path(); c.strokeStyle = gr ? '#c8ffd9' : '#ffe9b0'; c.lineWidth = 2.6 * S; c.stroke();
+      if (f.deco && this.doneT >= 0) {
+        c.globalAlpha = clamp(this.doneT * 2, 0, 1);
+        f.deco.forEach((p, i) => {
+          const x = this.ox + p.x * this.size, y = this.oy + p.y * this.size;
+          glow(c, x, y, 24 * S, 'rgba(140,255,180,0.6)');
+          if (i < 2) sparkle(c, x, y, 11 * S, '#ffffff'); else ell(c, x, y, 9 * S, 6 * S, '#e8fff0');
+        });
+        c.globalAlpha = 1;
+      }
     }
     // línea guía
     if (this.stepI > 0 && this.doneT < 0 && this.hover && (Input.down || !isTouch)) {
@@ -562,6 +604,7 @@ class Memory extends GameBase {
       const sz = clamp(110 * S, 70, 150);
       drawChar(c, 'pau', W / 2 - 40 * S, H * 0.82, sz, { happy: this.ended, arms: this.ended ? 'up' : null });
       drawChar(c, 'paula', W / 2 + 40 * S, H * 0.82, sz, { dir: -1, happy: this.ended, arms: this.ended ? 'up' : null });
+      drawChi(c, W / 2 + 95 * S, H * 0.82, sz * 0.42, { dir: -1, happy: this.ended, hop: this.ended ? Math.abs(Math.sin(t * 8)) * 12 : 0 });
       // caja
       if (!this.ended) {
         const bx = W / 2, by = H * 0.82;
@@ -819,6 +862,7 @@ class Rhythm extends GameBase {
     const up = dance && Math.floor(beat / 2) % 2 === 0;
     drawChar(c, 'pau', bx1, by, sz, { bob, arms: this.ended ? 'up' : up ? 'up' : 'wave', happy: this.combo >= 5 || this.ended });
     drawChar(c, 'paula', bx2, by, sz, { dir: -1, bob, arms: this.ended ? 'up' : up ? 'wave' : 'up', happy: this.combo >= 5 || this.ended });
+    drawChi(c, W / 2, H - 6, clamp(52 * S, 36, 64), { happy: this.combo >= 5 || this.ended, hop: dance ? Math.abs(Math.sin(beat * Math.PI)) * 10 : 0 });
     // carriles
     const cols = ['#ff6f91', '#c77dff', '#ffb347'];
     for (let l = 0; l < 3; l++) {

@@ -16,6 +16,7 @@ const CHAPTERS = [
     num: 'Luna 1', title: 'El Primer Encuentro',
     intro: [
       ['narr', 'Luna 1. Todo empezó con un encuentro…'],
+      ['narr', '(Y un chiwawa muy curioso con un collar verde ha decidido acompañarles… 🐶💚)'],
       ['pau', `¡Llego tarde! ${ELLA} me está esperando al otro lado de la ciudad.`],
       ['paula', '(¿Vendrá…? Ojalá que sí…)'],
       ['narr', 'Ayuda a Pau a cruzar la ciudad y recoge todos los corazones que puedas. ¡Puedes hacer doble salto!']
@@ -48,8 +49,9 @@ const CHAPTERS = [
       ['narr', 'Toca las estrellas en orden (1, 2, 3…) para dibujar cada constelación. La siguiente siempre brilla un poco más.']
     ],
     outro: [
-      ['paula', 'El cielo entero habla de nosotros.', 'happy'],
-      ['pau', 'Es que no hay nada que me guste más contar.']
+      ['paula', 'Espera… ¿la última era un chiwawa? 😂', 'happy'],
+      ['pau', 'Claro. Porque tú eres mi chiwawa. 💚', 'happy'],
+      ['paula', 'El cielo entero habla de nosotros…', 'happy']
     ]
   },
   {

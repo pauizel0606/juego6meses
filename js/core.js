@@ -240,12 +240,61 @@ function drawChar(c, who, x, y, h, o = {}) {
   c.restore();
 }
 
+/* ---------- el chiwawa ---------- */
+/* x,y = patas. h = altura hasta la punta de las orejas */
+function drawChi(c, x, y, h, o = {}) {
+  const u = h / 100, t = o.t != null ? o.t : Engine.t;
+  const fur = '#e0ad72', furD = '#c48d52', light = '#f6dcb6';
+  c.save(); c.translate(x, y);
+  if (!o.noShadow) ell(c, 0, 0, 22 * u, 4 * u, 'rgba(0,0,0,0.22)');
+  if (o.dir === -1) c.scale(-1, 1);
+  const hop = o.hop != null ? o.hop : 0;
+  c.translate(0, -hop * u);
+  const wag = Math.sin(t * (o.happy ? 18 : 8)) * (o.happy ? 9 : 5) * u;
+  // cola
+  c.strokeStyle = furD; c.lineCap = 'round'; c.lineWidth = 5 * u;
+  c.beginPath(); c.moveTo(16 * u, -12 * u); c.quadraticCurveTo(34 * u + wag * 0.3, -26 * u, 26 * u + wag, -42 * u); c.stroke();
+  // cuerpo y patas
+  ell(c, 0, -26 * u, 21 * u, 24 * u, fur);
+  ell(c, 0, -24 * u, 11 * u, 16 * u, light);
+  c.fillStyle = fur;
+  for (const s of [-1, 1]) { roundRect(c, s * 9 * u - 3.5 * u, -20 * u, 7 * u, 20 * u, 3 * u); c.fill(); ell(c, s * 9 * u, -1.5 * u, 5 * u, 3 * u, light); }
+  // orejas
+  const earW = Math.sin(t * 3) * 1.5 * u;
+  for (const s of [-1, 1]) {
+    c.fillStyle = fur; c.beginPath(); c.moveTo(s * 8 * u, -76 * u); c.lineTo(s * 34 * u + s * earW, -100 * u); c.lineTo(s * 20 * u, -56 * u); c.closePath(); c.fill();
+    c.fillStyle = '#ffb3b8'; c.beginPath(); c.moveTo(s * 11 * u, -73 * u); c.lineTo(s * 30 * u + s * earW, -93 * u); c.lineTo(s * 19 * u, -60 * u); c.closePath(); c.fill();
+  }
+  // cabeza
+  ell(c, 0, -62 * u, 20 * u, 18 * u, fur);
+  ell(c, 0, -54 * u, 10 * u, 7.5 * u, light);
+  ell(c, 0, -69 * u, 5 * u, 7 * u, light);
+  // ojos
+  const blink = ((t + 0.7) % 4.1) < 0.12;
+  for (const s of [-1, 1]) {
+    if (blink || o.happy) { c.strokeStyle = '#2a1a12'; c.lineWidth = 2 * u; c.beginPath(); c.arc(s * 8.5 * u, -62 * u, 3.6 * u, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); }
+    else { ell(c, s * 8.5 * u, -63 * u, 4.6 * u, 4.9 * u, '#1e130d'); ell(c, s * 8.5 * u + 1.5 * u, -64.8 * u, 1.6 * u, 1.6 * u, '#fff'); }
+  }
+  ell(c, 0, -57 * u, 3.3 * u, 2.4 * u, '#1e130d');
+  c.fillStyle = 'rgba(255,120,140,0.4)'; ell(c, -13 * u, -55 * u, 3 * u, 2 * u); ell(c, 13 * u, -55 * u, 3 * u, 2 * u);
+  if (o.happy) { c.fillStyle = '#ff7a90'; c.beginPath(); c.ellipse(0, -50 * u, 2.6 * u, 3.6 * u, 0, 0, Math.PI); c.fill(); }
+  // collar verde con chapita
+  c.strokeStyle = '#2fbf62'; c.lineWidth = 4 * u; c.beginPath(); c.ellipse(0, -46 * u, 12 * u, 4 * u, 0, 0.1, Math.PI - 0.1); c.stroke();
+  drawHeart(c, 0, -40 * u, 8 * u, '#3ccf6e', false);
+  c.restore();
+}
+
+/* ---------- vibración (móvil) ---------- */
+function vib(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
 /* ---------- motor ---------- */
 const Engine = {
   scene: null, paused: false, t: 0, last: 0, shake: 0,
   set(s) {
     if (this.scene && this.scene.destroy) this.scene.destroy();
     this.scene = s; this.paused = false;
+    const f = document.getElementById('fade');
+    if (f) { f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
     if (s && s.resize) s.resize();
   },
   frame(ts) {

@@ -1,7 +1,7 @@
 /* Flujo del juego */
 const Game = { cur: null };
 
-function hideAll() { ['#title', '#mapHud', '#finalUI', '#letter', '#panel', '#btnPause'].forEach(hide); }
+function hideAll() { ['#title', '#mapHud', '#finalUI', '#letter', '#voucher', '#panel', '#btnPause'].forEach(hide); }
 
 function goTitle() {
   hideAll(); Sound.music('calm');
@@ -99,9 +99,100 @@ function goFinal() {
   Engine.set(new FinalScene());
   Save.data.finalSeen = true; Save.save();
   clearTimeout(finalTimer);
-  finalTimer = setTimeout(() => { if (Engine.scene instanceof FinalScene) show('#finalUI'); }, 3500);
+  refreshFinalUI();
+  finalTimer = setTimeout(() => { if (Engine.scene instanceof FinalScene && $('#voucher').classList.contains('hidden') && $('#letter').classList.contains('hidden')) show('#finalUI'); }, 3500);
 }
+function refreshFinalUI() {
+  const seen = !!Save.data.valeSeen;
+  $('#btnGift').classList.toggle('hidden', seen);
+  $('#btnVale').classList.toggle('hidden', !seen);
+  $('#btnLetter').classList.toggle('hidden', !seen);
+}
+$('#btnGift').addEventListener('click', () => { Sound.click(); openVoucher(); });
+$('#btnVale').addEventListener('click', () => { Sound.click(); openVoucher(); });
 $('#btnLetter').addEventListener('click', () => { Sound.click(); openLetter(); });
+
+/* ---------- El vale (rasca y gana) ---------- */
+function openVoucher() {
+  hide('#finalUI');
+  const V = CONFIG.vale, el = $('#voucher'), seen = !!Save.data.valeSeen;
+  el.innerHTML = `<div class="v-wrap">
+    <p class="v-pre">${seen ? 'Tu vale 🎁' : 'Antes de la carta… ¡un regalo! 🎁'}</p>
+    <div class="ticket">
+      <div class="t-stub"><span>${esc(V.icono)}</span><small>Nº 6</small></div>
+      <div class="t-body">
+        <small class="t-tag">VALE POR</small>
+        <h3>${esc(V.titulo)}</h3>
+        <p class="t-det">${esc(V.detalle)}</p>
+        <div class="t-row"><span><b>Para:</b> ${esc(CONFIG.ella)}</span><span><b>De:</b> ${esc(CONFIG.el)}</span></div>
+        <p class="t-val"><b>Válido:</b> ${esc(V.valido)}</p>
+        <p class="t-small">${esc(V.letraPequena)}</p>
+        ${seen ? '' : '<canvas class="scratch"></canvas>'}
+      </div>
+    </div>
+    <p class="v-hint" id="vHint">${seen ? 'Haz una captura de pantalla para canjearlo 📸' : (isTouch ? 'Rasca con el dedo' : 'Rasca con el ratón') + ' para descubrirlo ✨'}</p>
+    <div class="v-actions">
+      <button class="btn pink big ${seen ? '' : 'hidden'}" id="vNext">${seen ? 'Volver 💌' : 'Y ahora… la carta 💌'}</button>
+    </div>
+  </div>`;
+  show('#voucher');
+  $('#vNext').onclick = () => { Sound.click(); hide('#voucher'); if (seen) { refreshFinalUI(); show('#finalUI'); } else openLetter(); };
+  if (seen) return;
+  const reveal = () => {
+    Save.data.valeSeen = true; Save.save();
+    Sound.win(); if (Engine.scene && Engine.scene.celebrate) Engine.scene.celebrate();
+    $('#vHint').textContent = '¡Es tuyo! Haz una captura para canjearlo cuando quieras 📸';
+    $('#vNext').classList.remove('hidden');
+  };
+  requestAnimationFrame(() => {
+    const finish = setupScratch(el.querySelector('.scratch'), reveal);
+    setTimeout(() => {
+      const h = $('#vHint'); if (!h || Save.data.valeSeen) return;
+      h.innerHTML += ' · <a id="vSkip">descubrirlo sin rascar</a>';
+      $('#vSkip').onclick = finish;
+    }, 7000);
+  });
+}
+function setupScratch(cvs, onDone) {
+  const r = cvs.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2);
+  cvs.width = Math.max(1, Math.round(r.width * d)); cvs.height = Math.max(1, Math.round(r.height * d));
+  const g = cvs.getContext('2d'); g.scale(d, d);
+  const gr = g.createLinearGradient(0, 0, r.width, r.height);
+  gr.addColorStop(0, '#bfc0d4'); gr.addColorStop(0.45, '#f3f3fa'); gr.addColorStop(0.55, '#e4e4ef'); gr.addColorStop(1, '#a5a6bd');
+  g.fillStyle = gr; g.fillRect(0, 0, r.width, r.height);
+  for (let i = 0; i < 26; i++) { g.globalAlpha = 0.25; drawHeart(g, Math.random() * r.width, Math.random() * r.height, 14 + Math.random() * 14, i % 3 ? '#ff8fab' : '#3ccf6e', false); }
+  g.globalAlpha = 1;
+  txt(g, 'RASCA AQUÍ ✨', r.width / 2, r.height / 2 - 10, Math.min(26, r.width / 10), '#6d6e88', { weight: 700 });
+  txt(g, '¿qué habrá debajo?', r.width / 2, r.height / 2 + 18, Math.min(15, r.width / 18), '#7f8099', { weight: 500 });
+  g.globalCompositeOperation = 'destination-out';
+  let down = false, last = null, done = false, n = 0;
+  const pos = e => { const b = cvs.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+  const finish = () => {
+    if (done) return; done = true;
+    cvs.style.transition = 'opacity .7s'; cvs.style.opacity = 0; setTimeout(() => cvs.remove(), 800);
+    onDone();
+  };
+  const check = () => {
+    const data = g.getImageData(0, 0, cvs.width, cvs.height).data;
+    let clear = 0, tot = 0;
+    for (let i = 3; i < data.length; i += 4 * 37) { tot++; if (data[i] < 128) clear++; }
+    if (clear / tot > 0.5) finish();
+  };
+  const scratch = (x, y) => {
+    if (done) return;
+    g.lineWidth = 38; g.lineCap = 'round';
+    if (last) { g.beginPath(); g.moveTo(last[0], last[1]); g.lineTo(x, y); g.stroke(); }
+    g.beginPath(); g.arc(x, y, 19, 0, TAU); g.fill();
+    last = [x, y]; n++;
+    if (n % 4 === 0) Sound.blip();
+    if (n % 10 === 0) check();
+  };
+  cvs.addEventListener('pointerdown', e => { e.preventDefault(); Sound.init(); down = true; last = null; try { cvs.setPointerCapture(e.pointerId); } catch (er) {} scratch(...pos(e)); });
+  cvs.addEventListener('pointermove', e => { if (down) { e.preventDefault(); scratch(...pos(e)); } });
+  const stop = () => { down = false; last = null; if (!done) check(); };
+  cvs.addEventListener('pointerup', stop); cvs.addEventListener('pointercancel', stop);
+  return finish;
+}
 
 let cntTimer = null;
 function openLetter() {
@@ -109,15 +200,15 @@ function openLetter() {
   const L = $('#letter');
   L.innerHTML = `<div class="paper">
     <div class="seal">💌</div>
-    <h2>Para ${esc(CONFIG.ella)}</h2>
+    <h2>${esc(CONFIG.saludo || 'Para ' + CONFIG.ella)},</h2>
     ${CONFIG.carta.map(p => `<p>${esc(p)}</p>`).join('')}
     <p class="sign">${esc(CONFIG.firma)}</p>
     <div class="counter" id="counterBox"><span>Llevamos juntos</span><b id="cnt"></b></div>
     <div class="question" id="qBox">
       <p>${esc(CONFIG.pregunta)}</p>
-      <div class="qbtns"><button id="btnYes" class="btn pink big">Sí 💖</button><button id="btnNo" class="btn ghost">No</button></div>
+      <div class="qbtns"><button id="btnYes" class="btn pink big">Sí 💚</button><button id="btnNo" class="btn ghost">No</button></div>
     </div>
-    <div class="letter-actions"><button class="btn" id="lMap">🗺️ Volver al mapa</button></div>
+    <div class="letter-actions"><button class="btn" id="lVale">🎁 Ver el vale</button><button class="btn" id="lMap">🗺️ Volver al mapa</button></div>
   </div>`;
   show('#letter'); L.scrollTop = 0;
   const start = new Date(CONFIG.fechaInicio + 'T00:00:00');
@@ -136,7 +227,7 @@ function openLetter() {
     e.preventDefault(); dodges++; Sound.pop();
     if (dodges >= 6) {
       no.style.position = ''; no.style.left = ''; no.style.top = '';
-      no.textContent = 'Vale, vale… ¡SÍ! 💖'; no.className = 'btn pink'; return;
+      no.textContent = "Vale, vale… ¡SÍ! 💚"; no.className = 'btn pink'; return;
     }
     const r = no.getBoundingClientRect();
     no.style.position = 'fixed';
@@ -149,14 +240,15 @@ function openLetter() {
   no.addEventListener('click', e => { if (dodges >= 6) sayYes(); else dodge(e); });
   $('#btnYes').addEventListener('click', sayYes);
   $('#lMap').addEventListener('click', () => { Sound.click(); clearInterval(cntTimer); goMap(); });
+  $('#lVale').addEventListener('click', () => { Sound.click(); clearInterval(cntTimer); hide('#letter'); openVoucher(); });
 }
 function sayYes() {
   Sound.win();
   if (Engine.scene && Engine.scene.celebrate) Engine.scene.celebrate();
   const no = $('#btnNo'); if (no) no.remove();
-  $('#qBox').innerHTML = `<div class="yay"><div class="big-heart">💖</div><p>${esc(CONFIG.respuestaSi)}</p></div>`;
+  $('#qBox').innerHTML = `<div class="yay"><div class="big-heart">💚</div><p>${esc(CONFIG.respuestaSi)}</p></div>`;
   const L = $('#letter');
-  setTimeout(() => { L.classList.add('hidden'); show('#finalUI'); $('#btnLetter').textContent = 'Releer la carta 💌'; }, 4200);
+  setTimeout(() => { L.classList.add('hidden'); refreshFinalUI(); show('#finalUI'); $('#btnLetter').textContent = 'Releer la carta 💌'; }, 5000);
 }
 
 /* ---------- arranque ---------- */
