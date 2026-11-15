@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Pau &amp; Paula · Seis Lunas</title>
+<meta name="description" content="Un juego de amor para celebrar nuestros 6 meses.">
+<meta name="theme-color" content="#1a1238">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Seis Lunas">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="layer"></div>
+
+<!-- Portada -->
+<div id="title" class="screen hidden">
+  <div class="title-wrap">
+    <p class="pre">una historia de amor</p>
+    <h1><span id="tEl">Pau</span> <span class="amp">&amp;</span> <span id="tElla">Paula</span></h1>
+    <p class="sub">~ Seis Lunas ~</p>
+    <div class="title-btns">
+      <button id="btnStart" class="btn big pink">Empezar ✨</button>
+      <button id="btnReset" class="btn ghost small hidden">Empezar de nuevo</button>
+    </div>
+    <p class="tip" id="titleTip"></p>
+  </div>
+</div>
+
+<!-- Mapa -->
+<div id="mapHud" class="hidden">
+  <div class="map-top">
+    <h2>Nuestras Seis Lunas</h2>
+    <p id="mapSub">Toca una luna para jugar</p>
+  </div>
+  <div class="map-bottom">
+    <button id="btnAlbum" class="btn">📖 Álbum</button>
+    <button id="btnFinal" class="btn pink hidden">💌 El final</button>
+  </div>
+</div>
+
+<!-- Botones superiores -->
+<div id="topBtns">
+  <button id="btnPause" class="icon-btn hidden" aria-label="Pausa">⏸</button>
+  <button id="btnSound" class="icon-btn" aria-label="Sonido">🔊</button>
+</div>
+
+<!-- Tarjeta de capítulo -->
+<div id="chapterCard" class="hidden">
+  <div class="cc-moon">🌙</div>
+  <div class="cc-num"></div>
+  <div class="cc-title"></div>
+</div>
+
+<!-- Diálogos -->
+<div id="dialog" class="hidden">
+  <div class="dlg">
+    <canvas id="dlgPortrait" width="160" height="160"></canvas>
+    <div class="dlg-body">
+      <div id="dlgName"></div>
+      <div id="dlgText"></div>
+    </div>
+    <div class="dlg-next">▼</div>
+  </div>
+  <button id="dlgSkip" class="btn ghost small">Saltar ⏭</button>
+</div>
+
+<!-- Panel genérico -->
+<div id="panel" class="screen hidden">
+  <div class="card">
+    <div class="content"></div>
+    <div class="actions"></div>
+  </div>
+</div>
+
+<!-- Final -->
+<div id="finalUI" class="hidden">
+  <button id="btnLetter" class="btn big pink">Abrir la carta 💌</button>
+</div>
+<div id="letter" class="screen hidden"></div>
+
+<script src="js/config.js"></script>
+<script src="js/story.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/core.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/games.js"></script>
+<script src="js/scenes.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
