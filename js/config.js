@@ -31,15 +31,35 @@ const CONFIG = {
   pregunta: '¿Quieres seguir escribiendo nuestra historia conmigo?',
   respuestaSi: '¡Sabía que dirías que sí! Aquí empieza la luna número siete… y todas las que vengan. Te quiero, mi chiwawa. 💚',
 
-  // Un recuerdo que se desbloquea al completar cada luna
+  // Un recuerdo que se desbloquea al completar cada luna (12)
   recuerdos: [
-    { titulo: 'El primer encuentro', texto: 'Ese día no sabía que estaba conociendo a la persona más importante de mi vida.' },
+    { titulo: 'La Luna Azul', texto: 'Dos semanas contigo y ya sabía que esto era especial. Tan raro y bonito como una Luna Azul.' },
     { titulo: 'Las mariposas', texto: 'Todavía me pongo nervioso cuando me escribes. Y me encanta que sea así.' },
+    { titulo: 'Dulce como tú', texto: 'Contigo hasta los días normales saben a tarta de fresa.' },
     { titulo: 'Nuestras estrellas', texto: 'Contigo, hasta las noches más normales se convierten en algo especial.' },
+    { titulo: 'Noches de verano', texto: 'El verano más bonito de mi vida tuvo tu nombre.' },
+    { titulo: 'El eclipse', texto: '12 de agosto de 2026. El cielo se apagó en pleno día y yo solo podía pensar en la suerte de estar viéndolo a tu lado.' },
     { titulo: 'Los pequeños momentos', texto: 'Los cafés, las risas, las tonterías… Todo es mejor si es contigo.' },
+    { titulo: 'Los deseos', texto: 'De todos los deseos que podría pedir, el que más se repite eres tú.' },
     { titulo: 'La carta', texto: 'Si tuviera que escribir todo lo que siento por ti, no habría papel suficiente en el mundo.' },
-    { titulo: 'Nuestra canción', texto: 'Seis meses después, sigo eligiéndote cada día. Y lo seguiré haciendo.' }
+    { titulo: 'Nuestras palabras', texto: 'Hay palabras que ya solo suenan bien si las dices tú.' },
+    { titulo: 'Compañeros de turno', texto: 'Hasta los turnos más largos se hacen cortos si al girarme estás tú.' },
+    { titulo: 'Nuestra canción', texto: 'Seis meses y doce lunas después, sigo eligiéndote cada día. Y lo seguiré haciendo.' }
   ],
+
+
+  // Palabras secretas (Luna 10): [PALABRA, pista]. Solo letras, sin espacios.
+  palabras: [
+    ['LUNA', 'Nos ha acompañado doce veces 🌙'],
+    ['ABRAZO', 'Mi sitio favorito del mundo'],
+    ['ECLIPSE', 'Lo que vimos juntos el 12 de agosto'],
+    ['CHIWAWA', 'Lo que eres para mí 💚'],
+    ['TEQUIERO', 'Lo que te diría cada minuto']
+  ],
+
+  // Deseos que salen al atrapar estrellas fugaces (Luna 8)
+  deseos: ['Más viajes juntos ✈️', 'Mil abrazos más', 'Que nunca dejemos de reírnos', 'Una casita con un chiwawa 🐶', 'Muchas cenas juntos 🍝',
+    'Bailar en la cocina', 'Ver otro eclipse contigo', 'Que siempre seas tú 💚', 'Despertar a tu lado', 'Más turnos juntos 🍔', 'Otras doce lunas', 'Tus besos de buenas noches'],
 
   // Parejas del juego de memoria (emoji + frase al encontrarla)
   memoria: [

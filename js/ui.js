@@ -5,10 +5,10 @@ const hide = s => $(s).classList.add('hidden');
 const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 
 const Save = {
-  KEY: 'pp6_save_v1',
+  KEY: 'pp6_save_v2',
   data: null,
-  fresh() { return { intro: false, unlocked: 1, stars: [0, 0, 0, 0, 0, 0], best: [0, 0, 0, 0, 0, 0], finalSeen: false }; },
-  load() { this.data = this.fresh(); try { const d = JSON.parse(localStorage.getItem(this.KEY)); if (d) Object.assign(this.data, d); } catch (e) {} },
+  fresh() { const n = CHAPTERS.length; return { intro: false, unlocked: 1, stars: Array(n).fill(0), best: Array(n).fill(0), finalSeen: false }; },
+  load() { this.data = this.fresh(); try { const d = JSON.parse(localStorage.getItem(this.KEY)); if (d && d.stars && d.stars.length === CHAPTERS.length) Object.assign(this.data, d); } catch (e) {} },
   save() { try { localStorage.setItem(this.KEY, JSON.stringify(this.data)); } catch (e) {} },
   reset() { this.data = this.fresh(); this.save(); },
   allDone() { return this.data.stars.every(s => s > 0); }
@@ -79,12 +79,14 @@ const UI = {
       const el = $('#chapterCard');
       el.querySelector('.cc-num').textContent = ch.num;
       el.querySelector('.cc-title').textContent = ch.title;
+      el.querySelector('.cc-date').textContent = `${ch.date} · ${ch.moon}`;
+      el.querySelector('.cc-moon').textContent = ch.type === 'eclipse' ? '🌑☀️' : ch.type === 'new' ? '🌑' : '🌕';
       el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
       show('#chapterCard');
       let done = false;
       const fin = () => { if (done) return; done = true; hide('#chapterCard'); el.onpointerdown = null; res(); };
       el.onpointerdown = () => { Sound.init(); fin(); };
-      setTimeout(fin, 2300);
+      setTimeout(fin, 2800);
     });
   },
   starsHtml(n) { return `<div class="stars">${[0, 1, 2].map(i => `<span class="${i < n ? 'on' : ''}">★</span>`).join('')}</div>`; },
@@ -101,7 +103,7 @@ const UI = {
   album() {
     const cards = CONFIG.recuerdos.map((m, i) => {
       const ok = Save.data.stars[i] > 0;
-      return `<div class="memo ${ok ? '' : 'locked'}"><div class="tag">${CHAPTERS[i].num} ${ok ? '★'.repeat(Save.data.stars[i]) : ''}</div>
+      return `<div class="memo ${ok ? '' : 'locked'}"><div class="tag">${CHAPTERS[i].num} · ${CHAPTERS[i].short} ${ok ? '★'.repeat(Save.data.stars[i]) : ''}</div>
         <h3>${ok ? esc(m.titulo) : '???'}</h3><p>${ok ? esc(m.texto) : 'Completa esta luna para desbloquear el recuerdo.'}</p></div>`;
     }).join('');
     return this.panel(`<h2>Nuestro álbum</h2><div class="album">${cards}</div>`, [['ok', 'Cerrar', 'pink']]);

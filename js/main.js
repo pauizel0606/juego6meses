@@ -32,7 +32,7 @@ function goMap() {
   hideAll(); Sound.music('calm');
   Engine.set(new MapScene(i => playChapter(i)));
   const tot = Save.data.stars.reduce((a, b) => a + b, 0);
-  $('#mapSub').textContent = Save.data.stars[0] ? `★ ${tot} / 18 estrellas` : 'Toca la luna que brilla para empezar';
+  $('#mapSub').textContent = Save.data.stars[0] ? `★ ${tot} / ${CHAPTERS.length * 3} estrellas · ${Save.data.stars.filter(s => s).length}/${CHAPTERS.length} lunas` : 'Toca la luna que brilla para empezar';
   $('#btnFinal').classList.toggle('hidden', !Save.allDone());
   show('#mapHud');
 }
@@ -52,14 +52,14 @@ async function playChapter(i, again, wasFirst) {
   const first = wasFirst != null ? wasFirst : !Save.data.stars[i];
   Save.data.stars[i] = Math.max(Save.data.stars[i], res.stars);
   Save.data.best[i] = Math.max(Save.data.best[i], res.hearts);
-  Save.data.unlocked = Math.max(Save.data.unlocked, Math.min(6, i + 2));
+  Save.data.unlocked = Math.max(Save.data.unlocked, Math.min(CHAPTERS.length, i + 2));
   Save.save();
   Sound.music('calm');
   const choice = await UI.result(i, res);
   if (choice === 'retry') return playChapter(i, true, first);
   if (first) await Dialog.play(ch.outro);
   busy = false;
-  if (i === 5 && first) goFinal(); else goMap();
+  if (i === CHAPTERS.length - 1 && first) goFinal(); else goMap();
 }
 
 function runGame(i, game) {
@@ -67,7 +67,7 @@ function runGame(i, game) {
     Game.cur = { i, game, res: r => { hide('#btnPause'); Game.cur = null; res(r); } };
     game.done = r => Game.cur && Game.cur.res(r);
     show('#btnPause');
-    Sound.music(i === 5 ? null : 'play');
+    Sound.music(CHAPTERS[i].game === 'Rhythm' ? null : 'play');
     game.begin();
   });
 }
@@ -82,7 +82,7 @@ async function pauseMenu() {
   if (r === 'restart') {
     const g = new GAMES[cur.i]();
     g.done = cur.game.done; cur.game = g;
-    Engine.set(g); Sound.music(cur.i === 5 ? null : 'play'); g.begin();
+    Engine.set(g); Sound.music(CHAPTERS[cur.i].game === 'Rhythm' ? null : 'play'); g.begin();
   } else if (r === 'exit') cur.res(null);
 }
 function onPauseKey() {

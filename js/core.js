@@ -235,8 +235,21 @@ function drawChar(c, who, x, y, h, o = {}) {
     c.strokeStyle = L.hair; c.lineWidth = 2.6 * u; c.beginPath();
     c.moveTo(0, hy - 25 * u); c.quadraticCurveTo(6 * u, hy - 34 * u, 10 * u, hy - 28 * u); c.stroke();
   }
-  c.strokeStyle = L.hairHi; c.lineWidth = 2 * u; c.globalAlpha *= 0.7;
-  c.beginPath(); c.arc(-4 * u, hy - 12 * u, 11 * u, Math.PI * 1.15, Math.PI * 1.45); c.stroke();
+  if (o.glasses) {
+    c.fillStyle = '#ffd23f'; roundRect(c, -17 * u, ey - 5.5 * u, 34 * u, 11 * u, 3 * u); c.fill();
+    c.fillStyle = '#111'; roundRect(c, -15 * u, ey - 4 * u, 13 * u, 8 * u, 2.5 * u); c.fill(); roundRect(c, 2 * u, ey - 4 * u, 13 * u, 8 * u, 2.5 * u); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(-13 * u, ey - 3 * u, 3 * u, 2 * u); c.fillRect(4 * u, ey - 3 * u, 3 * u, 2 * u);
+  }
+  if (o.cap) {
+    c.fillStyle = o.cap; c.beginPath(); c.ellipse(0, hy - 9 * u, 22.5 * u, 17 * u, 0, Math.PI, 0); c.fill();
+    c.fillRect(-22.5 * u, hy - 10 * u, 45 * u, 4 * u);
+    c.beginPath(); c.ellipse(16 * u, hy - 7 * u, 15 * u, 3.6 * u, 0, 0, TAU); c.fill();
+    c.fillStyle = '#ffc72c'; c.fillRect(-22.5 * u, hy - 8 * u, 45 * u, 2 * u);
+    drawHeart(c, -2 * u, hy - 17 * u, 9 * u, '#ffc72c', false);
+  } else {
+    c.strokeStyle = L.hairHi; c.lineWidth = 2 * u; c.globalAlpha *= 0.7;
+    c.beginPath(); c.arc(-4 * u, hy - 12 * u, 11 * u, Math.PI * 1.15, Math.PI * 1.45); c.stroke();
+  }
   c.restore();
 }
 

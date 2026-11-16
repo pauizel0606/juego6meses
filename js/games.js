@@ -897,4 +897,3 @@ class Rhythm extends GameBase {
   }
 }
 
-const GAMES = [Runner, Catch, Constel, Memory, Plane, Rhythm];
