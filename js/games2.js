@@ -690,5 +690,134 @@ class Burger extends GameBase {
 }
 
 /* Tabla de juegos por nombre (ver CHAPTERS[i].game en story.js) */
-const GAME_CLASSES = { Runner, Catch, Constel, Memory, Plane, Rhythm, Stack, Simon, Eclipse, Wishes, Words, Burger };
+/* ============ Nuestra canción: Happy Monday (vídeo oficial) ============ */
+let ytPromise = null;
+function loadYT() {
+  if (ytPromise) return ytPromise;
+  ytPromise = new Promise((res, rej) => {
+    if (window.YT && YT.Player) return res();
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { if (prev) prev(); res(); };
+    const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api';
+    s.onerror = () => { ytPromise = null; rej(new Error('yt')); };
+    document.head.appendChild(s);
+    setTimeout(() => { if (!(window.YT && YT.Player)) { ytPromise = null; rej(new Error('timeout')); } }, 8000);
+  });
+  return ytPromise;
+}
+class Song extends Rhythm {
+  constructor() {
+    super();
+    const C = this.C = CONFIG.cancion || {};
+    this.o.hint = { touch: 'Toca los corazones al llegar al círculo · la canción hace el resto 🎶', pc: 'A S D (o ← ↓ →) al llegar al círculo · la canción hace el resto 🎶' };
+    this.o.endText = `¡${C.titulo || 'Nuestra canción'}! 🎶`;
+    this.mode = C.youtube ? 'yt' : 'synth';
+    if (this.mode === 'yt') this.buildYT(); else this.buildSynth();
+    this.waitT = 0; this.notice = null; this.ytPlaying = false; this.dead = false;
+  }
+  buildYT() {
+    const C = this.C;
+    this.bpm = C.bpm || 96; this.spb = 60 / this.bpm; this.lead = 1.7;
+    this.endBeat = (C.duracion || 80) / this.spb;
+    this.notes = []; let lane = 1;
+    const last = Math.floor(this.endBeat) - 4;
+    for (let b = 4; b < last; b += b < 20 ? 4 : 2) {
+      if (b % 16 === 14) continue;
+      lane = (lane + randi(1, 2)) % 3;
+      this.notes.push({ b, t: b * this.spb + (C.desfase || 0), lane, state: 0 });
+      if (b > 40 && b % 16 === 8) { const l2 = (lane + 1) % 3; this.notes.push({ b: b + 1, t: (b + 1) * this.spb + (C.desfase || 0), lane: l2, state: 0 }); }
+    }
+    this.total = this.notes.length;
+  }
+  buildSynth() {
+    this.bpm = 96; this.spb = 60 / 96; this.lead = 1.8; this.endBeat = 96;
+    const all = buildSong().map(([b, m]) => ({ b, m, lane: m < 69 ? 0 : m < 74 ? 1 : 2, t: b * this.spb, state: 0 }));
+    this.notes = all.filter(n => n.b % 2 === 0 || n.b === 92);
+    this.bg = all.filter(n => !this.notes.includes(n));
+    this.total = this.notes.length;
+  }
+  fallback() {
+    if (this.dead || this.mode === 'synth') return;
+    this.mode = 'synth'; this.removeYT();
+    this.pts = 0; this.combo = 0; this.hearts = 0; this.perfect = 0; this.good = 0;
+    this.buildSynth(); this.resize();
+    this.notice = { s: 'Sin conexión: suena nuestra melodía 🎶', t: 3 };
+    if (this.cd <= 0) this.startSynth();
+  }
+  startSynth() {
+    Rhythm.prototype.onGo.call(this);
+    if (!Sound.ctx) return;
+    for (const n of this.bg) Sound.bell(n.m, this.songStart + n.t, 0.14, Sound.mus, this.track);
+  }
+  onGo() { if (this.mode === 'synth') this.startSynth(); else this.startYT(); }
+  startYT() {
+    const C = this.C;
+    loadYT().then(() => {
+      if (this.dead || this.mode !== 'yt') return;
+      const box = this.box = document.createElement('div'); box.id = 'ytBox';
+      box.innerHTML = `<div class="yt-frame"><div id="ytPlayer"></div></div><div class="yt-cap">🎶 ${esc(C.titulo)} · ${esc(C.artista || '')}</div>`;
+      document.body.appendChild(box); this.placeBox();
+      this.yt = new YT.Player('ytPlayer', {
+        videoId: C.youtube, width: '100%', height: '100%',
+        playerVars: { start: Math.floor(C.inicio || 0), autoplay: 1, cc_load_policy: 0, controls: 0, disablekb: 1, rel: 0, playsinline: 1, fs: 0, iv_load_policy: 3, modestbranding: 1 },
+        events: {
+          onReady: e => { try { e.target.setVolume(100); e.target.playVideo(); } catch (er) {} },
+          onError: () => this.fallback(),
+          onStateChange: e => { if (e.data === 1) { this.ytPlaying = true; this.notice = null; } }
+        }
+      });
+    }).catch(() => this.fallback());
+  }
+  placeBox() {
+    if (!this.box) { this.topY = 60; return; }
+    const bw = Math.min(W - 24, 240), bh = 200, sideRoom = (W - this.lw) / 2;
+    let left, top;
+    if (sideRoom > bw + 30) { left = (sideRoom - bw) / 2; top = Math.max(70, H * 0.22); this.topY = 60; }
+    else { left = (W - bw) / 2; top = 58; this.topY = top + bh + 34; }
+    Object.assign(this.box.style, { left: left + 'px', top: top + 'px', width: bw + 'px' });
+    this.box.querySelector('.yt-frame').style.height = bh + 'px';
+  }
+  resize() { super.resize(); this.placeBox(); }
+  ytNow() {
+    const p = this.yt; if (!p || !p.getCurrentTime) return 0;
+    let t = 0, st = -1; try { t = p.getCurrentTime() || 0; st = p.getPlayerState(); } catch (e) { return 0; }
+    const now = performance.now() / 1000;
+    if (st !== 1) { this.base = null; return t; }
+    if (!this.base || Math.abs(this.base.t + (now - this.base.n) - t) > 0.3) this.base = { t, n: now };
+    else if (t !== this.lastRaw) { const est = this.base.t + (now - this.base.n); this.base.t += (t - est) * 0.25; }
+    this.lastRaw = t;
+    return this.base.t + (now - this.base.n);
+  }
+  songTime() { return this.mode === 'yt' ? this.ytNow() - (this.C.inicio || 0) : super.songTime(); }
+  hitSound(n) {
+    if (this.mode === 'yt') { Sound.tone(1900, 0.06, { type: 'triangle', vol: 0.07 }); Sound.tone(2850, 0.05, { vol: 0.04 }); }
+    else Sound.bell(n.m, undefined, 0.34);
+  }
+  step(dt) {
+    if (this.notice) { this.notice.t -= dt; if (this.notice.t <= 0 && this.notice.keep !== true) this.notice = null; }
+    if (this.mode === 'yt' && !this.ytPlaying) {
+      this.waitT += dt;
+      if (this.waitT > 2.5) this.notice = { s: 'Toca el vídeo para que suene la canción 🎶', t: 1, keep: true };
+      if (this.waitT > 20) this.fallback();
+      return;
+    }
+    super.step(dt);
+  }
+  ending(dt) {
+    if (this.yt && this.yt.setVolume) {
+      try { const v = Math.max(0, 100 - this.endT * 40); this.yt.setVolume(v); if (v <= 0) this.yt.pauseVideo(); } catch (e) {}
+    }
+  }
+  onPause() { try { this.yt && this.yt.pauseVideo(); } catch (e) {} }
+  onResume() { try { this.yt && this.yt.playVideo(); } catch (e) {} }
+  removeYT() { try { this.yt && this.yt.destroy(); } catch (e) {} this.yt = null; if (this.box) this.box.remove(); this.box = null; this.topY = 60; }
+  destroy() { this.dead = true; super.destroy(); this.removeYT(); }
+  result() { const r = super.result(); r.label = `corazones de ${this.total}`; return r; }
+  draw(c) {
+    super.draw(c);
+    if (this.notice && this.started && this.cd <= 0) txt(c, this.notice.s, W / 2, this.topY + 26, clamp(17 * S, 14, 21), '#ffe3ec', { weight: 700, stroke: 'rgba(20,10,40,0.85)', lw: 5 });
+  }
+}
+
+const GAME_CLASSES = { Runner, Catch, Constel, Memory, Plane, Rhythm, Song, Stack, Simon, Eclipse, Wishes, Words, Burger };
 const GAMES = CHAPTERS.map(ch => GAME_CLASSES[ch.game]);

@@ -18,7 +18,7 @@ Cada luna real es un capítulo con su propio minijuego:
 | 9 | 26 sep | Luna de la Cosecha (llena) | La Carta Voladora | Guiar un avión de papel |
 | 10 | 10 oct | Luna nueva | Palabras Secretas | Ordenar letras con pistas |
 | 11 | 26 oct | Luna del Cazador (llena) | Turno de Noche | Montar hamburguesas en el trabajo 🍔 |
-| 12 | 9 nov | Luna nueva | Nuestra Canción | Juego de ritmo |
+| 12 | 9 nov | Luna nueva | Nuestra Canción | Ritmo con "Happy Monday" (W Sound 10), vídeo oficial |
 
 Al terminar se abre **el final**: fuegos artificiales, un vale de rasca y gana para una cena 🍝 y una carta 💌.
 Un chiwawa con collar verde acompaña a Pau y Paula durante toda la aventura.

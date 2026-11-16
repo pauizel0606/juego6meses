@@ -818,12 +818,13 @@ class Rhythm extends GameBase {
       const perf = bd <= 0.075;
       best.state = perf ? 1 : 2; perf ? this.perfect++ : this.good++;
       this.pts += perf ? 100 : 60; this.combo++; this.maxCombo = Math.max(this.maxCombo, this.combo); this.hearts++;
-      Sound.bell(best.m, undefined, 0.3);
+      this.hitSound(best);
       const x = this.left + (l + 0.5) * this.laneW;
       this.parts.burst(x, this.hitY, perf ? 10 : 6, { colors: perf ? ['#ffd77a', '#ff4d7d', '#fff'] : ['#ff8fab', '#fff'], size: 12, g: 100 });
       this.judge = { s: perf ? '¡Perfecto!' : '¡Bien!', c: perf ? '#ffd77a' : '#ffc2d4', t: 0.7 };
     }
   }
+  hitSound(n) { Sound.bell(n.m, undefined, 0.3); }
   down(x) { const l = Math.floor((x - this.left) / this.laneW); this.hitLane(clamp(l, 0, 2)); }
   key(k, d) {
     if (!d) return;

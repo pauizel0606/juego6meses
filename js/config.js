@@ -61,6 +61,18 @@ const CONFIG = {
   deseos: ['Más viajes juntos ✈️', 'Mil abrazos más', 'Que nunca dejemos de reírnos', 'Una casita con un chiwawa 🐶', 'Muchas cenas juntos 🍝',
     'Bailar en la cocina', 'Ver otro eclipse contigo', 'Que siempre seas tú 💚', 'Despertar a tu lado', 'Más turnos juntos 🍔', 'Otras doce lunas', 'Tus besos de buenas noches'],
 
+  // Nuestra canción (Luna 12). Suena el vídeo oficial de YouTube dentro del juego.
+  // Si no se puede cargar (sin internet), suena una melodía propia del juego.
+  cancion: {
+    titulo: 'Happy Monday',
+    artista: 'W Sound 10 · Hades66, Westcol, Ovy On The Drums',
+    youtube: 'LYn4w3m3Pjo',   // id del vídeo oficial (canal W Sound)
+    inicio: 0,                // segundo del vídeo donde empieza el juego
+    duracion: 80,             // segundos que dura el minijuego
+    bpm: 96,                  // pulsos por minuto (para que los corazones caigan al ritmo)
+    desfase: 0                // ajuste fino en segundos si los corazones van adelantados (+) o atrasados (-)
+  },
+
   // Parejas del juego de memoria (emoji + frase al encontrarla)
   memoria: [
     ['🌹', 'Una flor para la flor más bonita.'],

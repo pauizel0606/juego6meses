@@ -67,7 +67,7 @@ function runGame(i, game) {
     Game.cur = { i, game, res: r => { hide('#btnPause'); Game.cur = null; res(r); } };
     game.done = r => Game.cur && Game.cur.res(r);
     show('#btnPause');
-    Sound.music(CHAPTERS[i].game === 'Rhythm' ? null : 'play');
+    Sound.music(['Rhythm', 'Song'].includes(CHAPTERS[i].game) ? null : 'play');
     game.begin();
   });
 }
@@ -75,14 +75,15 @@ function runGame(i, game) {
 async function pauseMenu() {
   const cur = Game.cur;
   if (!cur || Engine.paused || Dialog.active || cur.game.ended || !cur.game.started) return;
-  Engine.paused = true; Sound.hold();
+  Engine.paused = true; Sound.hold(); if (cur.game.onPause) cur.game.onPause();
   const r = await UI.panel('<h2>Pausa</h2><p>Tómate tu tiempo 💕</p>', [['exit', 'Salir al mapa'], ['restart', '↻ Reiniciar'], ['resume', 'Continuar ▶', 'pink']]);
   Sound.release(); Engine.paused = false;
   if (Game.cur !== cur) return;
+  if (r === 'resume' && cur.game.onResume) cur.game.onResume();
   if (r === 'restart') {
     const g = new GAMES[cur.i]();
     g.done = cur.game.done; cur.game = g;
-    Engine.set(g); Sound.music(CHAPTERS[cur.i].game === 'Rhythm' ? null : 'play'); g.begin();
+    Engine.set(g); Sound.music(['Rhythm', 'Song'].includes(CHAPTERS[cur.i].game) ? null : 'play'); g.begin();
   } else if (r === 'exit') cur.res(null);
 }
 function onPauseKey() {

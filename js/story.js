@@ -159,12 +159,12 @@ const CHAPTERS = [
     ]
   },
   {
-    num: 'Luna 12', date: '9 de noviembre', short: '9 nov', moon: 'Luna nueva', type: 'new', title: 'Nuestra Canción', game: 'Rhythm',
+    num: 'Luna 12', date: '9 de noviembre', short: '9 nov', moon: 'Luna nueva', type: 'new', title: 'Nuestra Canción', game: 'Song',
     intro: [
       ['narr', '9 de noviembre. La última luna nueva antes de los seis meses… y una canción que ya es solo vuestra.'],
-      ['paula', '¿Bailamos?', 'happy'],
-      ['pau', 'Toca tú la melodía, yo te sigo.', 'happy'],
-      ['narr', 'Cada corazón que aciertes toca una nota. ¡Si los aciertas todos, sonará la canción entera!']
+      ['paula', '¡Ay, que suena Happy Monday! 🎶', 'happy'],
+      ['pau', '¿Bailamos?', 'happy'],
+      ['narr', 'Suena vuestra canción. Toca solo los corazones cuando lleguen al círculo: la música hace el resto. (Si no suena, toca el vídeo.)']
     ],
     outro: [
       ['narr', 'La duodécima luna vuelve al cielo…'],
